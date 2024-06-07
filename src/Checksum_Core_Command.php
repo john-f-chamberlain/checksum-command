@@ -17,6 +17,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 */
 	private $include_root = false;
 
+    private $ignored_files = [];
+
 	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
@@ -83,6 +85,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			$this->include_root = true;
 		}
 
+		if ( ! empty ($assoc_args['ignore-files'] ) ) {
+			$this->ignored_files = array_map('trim', explode(',', $assoc_args['ignore-files']));
+		}
+
 		if ( empty( $wp_version ) ) {
 			$details    = self::get_wp_details();
 			$wp_version = $details['wp_version'];
@@ -107,6 +113,11 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		$has_errors = false;
 		foreach ( $checksums as $file => $checksum ) {
+			// Skip ignored files
+			if ( in_array($file, $this->ignored_files ) ) {
+				continue;
+			}
+
 			// Skip files which get updated
 			if ( 'wp-content' === substr( $file, 0, 10 ) ) {
 				continue;
